@@ -1,0 +1,35 @@
+#chart {
+  background: black;
+}
+
+#chart rect.room {
+  fill: none;
+  stroke: silver;
+  stroke-width: 3px;
+}
+
+#chart rect.room:hover {
+  cursor: move;
+}
+
+.outside {
+  fill: grey;
+  stroke: white;
+}
+
+#chart text {
+    fill: white;
+    font: 10px Helvetica;
+    text-anchor: end;
+    stroke: none;
+}
+
+#chart .info {
+    fill: black;
+    font: 20px Helvetica;
+}
+
+.inside {
+    fill: steelblue;
+    stroke: white;
+}
