@@ -20,15 +20,13 @@ var sqrt2 = Math.sqrt(2.0)/2;
 var chart = d3.select('#chart')
     .attr('width', shft + width + shft)
     .attr('height', shft + height + shft )
-var n = 0, maxI=60, maxJ=30;
-var rect = [];
 
 var groupPath = chart.append('g')
-      .attr('class', 'outside')
-      .attr('id', 'groupPath')
+    .attr('class', 'outside')
+    .attr('id', 'groupPath')
 
 var bh2 = barHeight/2, bw2 = barWidth/2;
-var x2=0,y2=0;
+var n = 0, maxI=60, maxJ=30;
 for (j=-10,y = shft; j<maxJ; j++,y += barHeight) {
   for (i=-10,x=shft; i<maxI; i++,x += barWidth) {
     dy= - barHeight/substep*(i%substep);
@@ -49,7 +47,7 @@ for (j=-10,y = shft; j<maxJ; j++,y += barHeight) {
     path.lineTo(points[c].x, points[c].y);
     c++;
 
-		p = rotate45({ 'x': -bw2, 'y': -bh2 });
+    p = rotate45({ 'x': -bw2, 'y': -bh2 });
     points[c] = { 'x':pC.x + p.x, 'y':pC.y + p.y };
     path.lineTo(points[c].x, points[c].y);
     c++;
@@ -58,11 +56,11 @@ for (j=-10,y = shft; j<maxJ; j++,y += barHeight) {
     points[c] = { 'x':pC.x + p.x, 'y':pC.y + p.y };
     path.lineTo(points[c].x, points[c].y);
 
-		path.closePath();
+    path.closePath();
     
     groupPath.append('path')
-    	.data([points])
-    	.attr('d', path)
+      .data([points])
+      .attr('d', path)
       .attr('id', 'bar'+ (++n))
       
     groupPath.append('text')
@@ -71,7 +69,6 @@ for (j=-10,y = shft; j<maxJ; j++,y += barHeight) {
       .attr('dy', '-1em')
       .attr('dx', '.5em')    
       .attr('id', 'bar'+n)
-      
   }
 }
 
@@ -84,7 +81,7 @@ var room = chart.append('rect')
     .attr("transform", "translate(" + shft + "," + shft + ")")
     .attr('class', 'room')
     .attr('id', 'room')
-		.call(d3.drag()
+    .call(d3.drag()
     
             .on('drag', function (d) {
               d.x += d3.event.dx;
@@ -93,9 +90,9 @@ var room = chart.append('rect')
                 return "translate(" + [ d.x,d.y ] + ")"
               })
               
-              calculate(d);
+              findIntersections();
             })
-		)
+    )
     
 var info = chart.append('text')
     .attr('x', 0)
@@ -104,15 +101,11 @@ var info = chart.append('text')
     .attr('dx', '1.35em')    
     .attr('class', 'info')
     
-calculate(d3.select('#room'));
+findIntersections();
     
-function calculate(bar) {
-  findIntersections();
-}
-
 function rotate45(point) {
   return { 
-  	'x': (point.x-point.y)*sqrt2, 
+    'x': (point.x-point.y)*sqrt2, 
     'y': (point.x+point.y)*sqrt2 
   };
 }
@@ -122,7 +115,7 @@ function findIntersections() {
 
   d3.selectAll('#room').each(function (room) {
     d3.selectAll('path').each(function (d) {
-    	found = isIntersected(room, d);
+      found = isIntersected(room, d);
       
       // color 
       bar = d3.select(this);
@@ -130,21 +123,20 @@ function findIntersections() {
         count++;
         if (bar.attr('class') !== 'inside') {
           bar.attr('class', 'inside')
-        }          
+        }
         d3.selectAll('text#'+bar.attr('id')).text(count)
       } else {
         if (bar.attr('class') !== 'outside') {
           bar.attr('class', 'outside')
-        }          
+        }
         d3.selectAll('text#'+bar.attr('id')).text('')
       }
     });
-	});
+  });
   info.text('Covered: ' + count);  
 }
 
 function isIntersected(room, d) {
-  found = false;
   minX = Math.min(d[0].x,d[1].x,d[2].x,d[3].x);
   maxX = Math.max(d[0].x,d[1].x,d[2].x,d[3].x);
   minY = Math.min(d[0].y,d[1].y,d[2].y,d[3].y);
@@ -152,68 +144,54 @@ function isIntersected(room, d) {
   if (!(minX > room.x + roomWidth || maxX < room.x) && 
       !(minY > room.y + roomHeight || maxY < room.y)) 
   {
-
     for (j = 0; j < 4; j++) {
       // bar corner inside room?
       if ((room.x <= d[j].x && d[j].x <= room.x + roomWidth) &&
           (room.y <= d[j].y && d[j].y <= room.y + roomHeight)) {
-        //console.log('IN corner', this, d[j], room);
-        found = true;
-        break; // found
+        return true;
       }
-    }
-
-    if (!found) {
-      // check bar border crosses room border
-      for (j = 0; j < 4; j++) {
-        // left room border
-        tx = (room.x - d[j].x) / (d[(j+1)%4].x - d[j].x);
-        if (0 <= tx && tx <= 1) {
-          y = d[j].y + tx * (d[(j+1)%4].y - d[j].y);
-          if (room.y <= y && y <= room.y + roomHeight) {
-            //console.log('IN left border', this, d[j], room);
-            found = true;
-            break; // found
-          }
-        }
-
-        // right room border
-        tx = (room.x+roomWidth - d[j].x) / (d[(j+1)%4].x - d[j].x);
-        if (0 <= tx && tx <= 1) {
-          y = d[j].y + tx * (d[(j+1)%4].y - d[j].y);
-          if (room.y <= y && y <= room.y + roomHeight) {
-            //console.log('IN right border', this, d[j], room);
-            found = true;
-            break; // found
-          }
-        }
-
-        // top room border
-        ty = (room.y - d[j].y) / (d[(j+1)%4].y - d[j].y);
-        if (0 <= ty && ty <= 1) {
-          x = d[j].x + ty * (d[(j+1)%4].x - d[j].x);
-          if (room.x <= x && x <= room.x + roomWidth) {
-            //console.log('IN top border', this, d[j], room);
-            found = true;
-            break; // found
-          }
-        }
-
-        // bottom room border
-        ty = (room.y + roomHeight - d[j].y) / (d[(j+1)%4].y - d[j].y);
-        if (0 <= ty && ty <= 1) {
-          x = d[j].x + ty * (d[(j+1)%4].x - d[j].x);
-          if (room.x <= x && x <= room.x + roomWidth) {
-            //console.log('IN bottom border', this, d[j], room);
-            found = true;
-            break; // found
-          }
-        }            
-      } // for
     }
   }
   
-  return found;
-}	
+  // check bar border crosses room border
+  for (j = 0; j < 4; j++) {
+    // left room border
+    tx = (room.x - d[j].x) / (d[(j+1)%4].x - d[j].x);
+    if (0 <= tx && tx <= 1) {
+      y = d[j].y + tx * (d[(j+1)%4].y - d[j].y);
+      if (room.y <= y && y <= room.y + roomHeight) {
+        return true;
+      }
+    }
+
+    // right room border
+    tx = (room.x+roomWidth - d[j].x) / (d[(j+1)%4].x - d[j].x);
+    if (0 <= tx && tx <= 1) {
+      y = d[j].y + tx * (d[(j+1)%4].y - d[j].y);
+      if (room.y <= y && y <= room.y + roomHeight) {
+        return true;
+      }
+    }
+
+    // top room border
+    ty = (room.y - d[j].y) / (d[(j+1)%4].y - d[j].y);
+    if (0 <= ty && ty <= 1) {
+      x = d[j].x + ty * (d[(j+1)%4].x - d[j].x);
+      if (room.x <= x && x <= room.x + roomWidth) {
+        return true;
+      }
+    }
+
+    // bottom room border
+    ty = (room.y + roomHeight - d[j].y) / (d[(j+1)%4].y - d[j].y);
+    if (0 <= ty && ty <= 1) {
+      x = d[j].x + ty * (d[(j+1)%4].x - d[j].x);
+      if (room.x <= x && x <= room.x + roomWidth) {
+        return true;
+      }
+    }
+  } // for j
+  return false;
+}
 </script>
 </body></html>
